@@ -5,13 +5,11 @@ The application is developed in Go and Python, and it utilizes a tool called s5c
 
 The preference for custom s5jtransfer_v11 scripts over the standard s5cmd stems from the latter's limitations, particularly in robust sync features. 
 While standard s5cmd excels in creating concurrent copy commands for efficient data transfer, it falls short in preventing redundant data transfer. 
-This issue becomes evident in complex tasks, such as performing a dual sync from an S3 Snowball to local storage and then to another S3 bucket. 
-Such a limitation was highlighted during a power outage at the forward edge, where the native s5cmd sync failed to transfer data from the archiver to the snowball, 
-a problem that was resolved using the custom s5jtransfer_v11 sync script.
+This issue becomes evident in complex tasks, such as performing a dual sync from an S3 Snowball to local storage and then to another S3 bucket.
 
 The custom s5jtransfer_v11 scripts offer enhanced capabilities, including dual sync with checksum verification, support for multiple volume transfers to improve read/write speeds, and avoidance of data transfer bottlenecks. 
 Additionally, they maintain a detailed ledger to monitor data at every transfer stage. 
-A key advantage of these s5jtransfer_v11 scripts is their compatibility with Versa SD-WAN, enabling data transfer via this network, a functionality absent in the native s5cmd.
+A key advantage of these s5jtransfer_v11 scripts is their compatibility with SD-WAN, enabling data transfer via this network, a functionality absent in the native s5cmd.
 
 =====================================================================================================================================================================================
 
