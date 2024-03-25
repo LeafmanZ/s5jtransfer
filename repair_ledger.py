@@ -93,21 +93,16 @@ def main():
     objects_in_src = list_objects(bucket_src_name, bucket_src_prefix, s3_client_src, isSnow=(bucket_src_region=='snow'))
     objects_in_dest = list_objects(bucket_dest_name, bucket_dest_prefix, s3_client_dest, isSnow=(bucket_dest_region=='snow'))
 
-    dest_difference = {key for key in objects_in_src if (key not in objects_in_dest or objects_in_src[key] != objects_in_dest[key])}
-
-    print(f'Objects in source not in destination {dest_difference}')
-    print(f'\n\nTotal number of missing objects: {len(dest_difference)}')
-
-    src_ledger_df = pd.read_csv('src_ledger.csv')
+    dest_moved = {key: objects_in_src[key] for key in objects_in_src if (key in objects_in_dest and objects_in_src[key] == objects_in_dest[key])}
     
-    if dest_difference:
-        src_ledger_df = src_ledger_df[~src_ledger_df['Key'].isin(dest_difference)]
-        print(f"Rows with keys {dest_difference} removed from src_ledger.csv")
+    if len(objects_in_src) == len(dest_moved):
+        print('All objects have been successfully moved from source to destination.')
     else:
-        print(f"All objects have been moved successfully.")
-
-    # Save the updated DataFrame back to the CSV
-    src_ledger_df.to_csv('src_ledger.csv', index=False)
+        print('Objects were missing, ledger has been updated.')
+        print('Number of objects missing:', len(objects_in_src) - len(dest_moved))
+        src_ledger_df = pd.DataFrame(list(dest_moved.items()), columns=['Key', 'Size'])
+        src_ledger_df.to_csv('src_ledger.csv', index=False)
+        print('Please run src_sync_mvol.py and dest_sync_mvol.py again.')
 
 if __name__ == "__main__":
     main()

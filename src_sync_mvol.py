@@ -77,7 +77,7 @@ def main():
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
 
-    while True:
+    while src_difference:
         volume_usages = {volume: get_disk_usage(volume) for volume in volumes}
         
         available_space_per_volume = {
@@ -202,6 +202,10 @@ def main():
         print('Objects set to move have been recorded to src_ledger.csv')
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
+
+    print('ALL FILES FROM SOURCE HAVE COMPLETED MOVING.')
+    print('src_sync_mvol.py has stopped.')
+    print('PLEASE RUN repair_ledger.py to verify data integrity.')
 
 if __name__ == "__main__":
     main()
