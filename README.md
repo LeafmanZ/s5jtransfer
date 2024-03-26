@@ -59,12 +59,12 @@ Requirements:
 Set up instructions (Applicable if prerequisites aren't installed):
     If you are using an s5jtransfer_v11 ami, execute the following commands:
         source ~/.profile
-        source /home/ec2-user/anaconda3/bin/activate # only if you are unable to see anaconda
+        source /home/ubuntu/anaconda3/bin/activate # only if you are unable to see anaconda
 
     And then skip the rest of this section because everything is already set up and configured in the s5jtransfer_v11 ami.
 
     Navigate to this folder:
-    cd path/to/this/s5jtransfer_v11
+    cd path/to/this/s5jtransfer
     Ensure that you are in the correct directory.
 
     Part 1: Installing GOlang
@@ -98,8 +98,8 @@ Set up instructions (Applicable if prerequisites aren't installed):
     Part 3: Installing Python with Anaconda
 
         To install the latest version of Python, follow these steps:
-            cd path/to/this/s5jtransfer_v11/conda
-            bash Anaconda3-2023.09-0-Linux-x86_64.sh
+            cd path/to/this/s5jtransfer/conda
+            bash Anaconda3-version-Linux-x86_64.sh
             
         Follow the on-screen instructions during the installation process, pressing 'enter' and agreeing ('yes') when prompted.
 
@@ -113,8 +113,7 @@ Set up instructions (Applicable if prerequisites aren't installed):
             conda activate s5jtransfer
         
         Install additional dependencies necessary for your project (with s5jtransfer activated):
-            pip install s3transfer-0.6.2-py3-none-any.whl
-            pip install boto3-1.26.69-py3-none-any.whl
+            pip install boto3
 
         Ensure that you activate the s5jtransfer environment whenever you need to run Python scripts located in path/to/this/s5jtransfer_v11/
         Remember, activating the correct environment is crucial before running your Python scripts to ensure that all dependencies are available and configured properly.
@@ -125,7 +124,7 @@ Set up instructions (Applicable if prerequisites aren't installed):
 Usage:
 
     Navigate to this folder:
-    cd path/to/this/s5jtransfer_v11
+    cd path/to/this/s5jtransfer
     Ensure that you are in the correct directory.
 
     Part 1: Reset environment
