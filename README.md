@@ -6,66 +6,57 @@ The application is developed in Go and Python, and it utilizes a tool called s5c
 The preference for custom s5jtransfer_v11 scripts over the standard s5cmd stems from the latter's limitations, particularly in robust sync features. 
 While standard s5cmd excels in creating concurrent copy commands for efficient data transfer, it falls short in preventing redundant data transfer. 
 This issue becomes evident in complex tasks, such as performing a dual sync from an S3 Snowball to local storage and then to another S3 bucket.
+Such a limitation was highlighted during a power outage at the forward edge, where the native s5cmd sync failed to transfer data from the archiver to the snowball, 
+a problem that was resolved using the custom s5jtransfer_v11 sync script.
 
 The custom s5jtransfer_v11 scripts offer enhanced capabilities, including dual sync with checksum verification, support for multiple volume transfers to improve read/write speeds, and avoidance of data transfer bottlenecks. 
 Additionally, they maintain a detailed ledger to monitor data at every transfer stage. 
-A key advantage of these s5jtransfer_v11 scripts is their compatibility with SD-WAN, enabling data transfer via this network, a functionality absent in the native s5cmd.
+A key advantage of these s5jtransfer_v11 scripts is their compatibility with Versa SD-WAN, enabling data transfer via this network, a functionality absent in the native s5cmd.
 
 =====================================================================================================================================================================================
 
 TLDR I hate reading, I just want to start using s5jtransfer_v11:
 
-    1. Attach as many volumes as possible to your EC2 instance for optimal performance.
-
-    2. To activate the Conda environment, execute the command: `conda activate s5jtransfer`.
-
-    3. Edit the `config.yaml` file by entering `nano config.yaml`. Save your changes with `Ctrl+O` and exit with `Ctrl+X`.
-
-    4. Execute the script `setup_volumes.py`.
-
-    5. If starting from the beginning, run `python reset.py`.
-
-    6. Test your connection to the destination bucket and verify it's the correct one by running `python dest_connect_test.py`.
-
-    7. Ensure you can connect to the source bucket and it's the correct one by executing `python src_connect_test.py`.
-
-    8. Start the destination sync process in the background by running `nohup python dest_sync_mvol.py > /dev/null 2>&1 &`.
-
-    9. Similarly, start the source sync process in the background with `nohup python src_sync_mvol.py > /dev/null 2>&1 &`.
-
-    10. Confirm both sync processes are running by checking active Python processes with `ps aux | grep python`.
-
-    11. Monitor the progress of moved objects with `wc -l src_ledger.csv`.
-
-    12. Completion is indicated when `src_ledger.csv` matches the count from `src_connect_test.py` plus one.
-
-    13. Perform a final verification with `python repair_ledger.py` to ensure all objects were correctly moved.
-
-    14. If the count in `src_ledger.csv` decreases, indicating objects were removed, first identify all related process IDs with `ps aux | grep python`. Terminate these processes with `kill <PID>` for both `dest_sync_mvol.py` and `src_sync_mvol.py`.
-
-    15. Repeat steps 8 to 14 until nothing is removed by `python repair_ledger.py`.
+1. Attach as many volumes as possible to your EC2 instance for optimal performance.
+2. Edit the `config.yaml` file by entering `nano config.yaml`. Save your changes with `Ctrl+O` and exit with `Ctrl+X`.
+3. Execute the script `setup_volumes.py`.
+4. If starting from the beginning, run `python reset.py`.
+5. Test your connection to the destination bucket and verify it's the correct one by running `python dest_connect_test.py`.
+6. Ensure you can connect to the source bucket and it's the correct one by executing `python src_connect_test.py`.
+7. Start the destination sync process in the background by running `nohup python dest_sync_mvol.py > /dev/null 2>&1 &`.
+8. Similarly, start the source sync process in the background with `nohup python src_sync_mvol.py > /dev/null 2>&1 &`.
+9. Confirm both sync processes are running by checking active Python processes with `ps aux | grep python`.
+10. Monitor the progress of moved objects with `wc -l src_ledger.csv`.
+11. Completion is indicated when `src_ledger.csv` matches the count from `src_connect_test.py` plus one.
+12. Perform a final verification with `python repair_ledger.py` to ensure all objects were correctly moved.
+13. If the count in `src_ledger.csv` decreases, indicating objects were removed, first identify all related process IDs with `ps aux | grep python`. Terminate these processes with `kill <PID>` for both `dest_sync_mvol.py` and `src_sync_mvol.py`.
+14. Repeat steps 7 to 13 until nothing is removed by `python repair_ledger.py`.
 
 =====================================================================================================================================================================================
 
 Requirements:
 
-    linux/amd64
-    go version = 1.21.1
+    linux/amd64 (AMI is built on Ubuntu 22.04)
+    go version = 1.21.5
     s5cmd version = 2.2.2
-    python3 version >= 3.9.0
+    python version >= 3.11.0
 
 =====================================================================================================================================================================================
 
 Set up instructions (Applicable if prerequisites aren't installed):
-    If you are using an s5jtransfer_v11 ami, execute the following commands:
-        source ~/.profile
-        source /home/ubuntu/anaconda3/bin/activate # only if you are unable to see anaconda
+
+    SETUP FROM AMI
 
     And then skip the rest of this section because everything is already set up and configured in the s5jtransfer_v11 ami.
+
+    SETUP FROM SCRATCH
 
     Navigate to this folder:
     cd path/to/this/s5jtransfer
     Ensure that you are in the correct directory.
+
+    Prerequisites:
+        - Linux must be installed (Ubuntu 22.04 recommended)
 
     Part 1: Installing GOlang
 
@@ -98,26 +89,31 @@ Set up instructions (Applicable if prerequisites aren't installed):
     Part 3: Installing Python with Anaconda
 
         To install the latest version of Python, follow these steps:
-            cd path/to/this/s5jtransfer/conda
-            bash Anaconda3-version-Linux-x86_64.sh
+            Navigate to:
+                https://www.anaconda.com/download
+            Copy the download link. It should look like:
+                https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
+            In terminal execute:
+                wget https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
+            In terminal execute:
+                bash Anaconda3-2024.02-1-Linux-x86_64.sh
             
         Follow the on-screen instructions during the installation process, pressing 'enter' and agreeing ('yes') when prompted.
+        
+        In terminal exectute:
+            nano ~/.bashrc
+        At the very bottom of the file add the following line:
+            source /home/ubuntu/anaconda3/bin/activate
+        Then press the keys to save and close the file:
+            Ctrl+O
+            Ctrl+X
+        In terminal exectute:
+            sudo reboot
 
-        To verify that anaconda has been installed successfully, open a new terminal and run:
+        To verify that anaconda has been installed successfully, in terminal execute:
             conda
             
         After executing, you should see the conda help information displayed.
-
-        It's advisable to have separate Python environments for different projects. Set up a new environment by running:        
-            conda create --name s5jtransfer --clone base
-            conda activate s5jtransfer
-        
-        Install additional dependencies necessary for your project (with s5jtransfer activated):
-            pip install boto3
-
-        Ensure that you activate the s5jtransfer environment whenever you need to run Python scripts located in path/to/this/s5jtransfer_v11/
-        Remember, activating the correct environment is crucial before running your Python scripts to ensure that all dependencies are available and configured properly.
-
 
 =====================================================================================================================================================================================
 
@@ -134,9 +130,9 @@ Usage:
         We need to refresh the environment by removing previous run data and details. 
         Subsequently, establish our volumes if distributing data across multiple concurrent volumes.
         
-        Execute the following commands in sequence (if you are using anaconda use python instead of python3):
-            python3 reset.py
-            python3 setup_volumes.py # only use setup_volumes.py if you need to provision volumes and attach them to a folder.
+        Execute the following commands in sequence (if you are using anaconda use python instead of python):
+            python reset.py
+            python setup_volumes.py # only use setup_volumes.py if you need to provision volumes and attach them to a folder.
     
     Part 2: Configure config.yaml
         
@@ -188,8 +184,8 @@ Usage:
             Inherent logic, integrated with a ledger system, guarantees that data once transferred will not be redundantly moved.
             Additionally, the management of storage space from the source to the multiple volume directories is seamlessly handled and completed automatically.
 
-            Execute the following command (if you are using anaconda use python instead of python3):
-                python3 sync_mvol.py
+            Execute the following command (if you are using anaconda use python instead of python):
+                python sync_mvol.py
 
         In both scripts, you'll notice messages indicating the source and destination of data transfers. 
         When there's no data to transfer, the scripts will simply report that they're scanning for new data to move.
