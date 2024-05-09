@@ -62,8 +62,8 @@ def main():
             s3_client_src = session.resource('s3', endpoint_url=src_endpoint_urls[0])
 
     # set up available volumes
-    # base_path = "/tmp/volume-"
-    base_path = "/home/leafmanznotel/volume-"
+    base_path = "/tmp/volume-"
+    # base_path = "/home/leafmanznotel/volume-"
     volumes = [base_path + str(i).zfill(2) for i in range(1, 100) if os.path.exists(base_path + str(i).zfill(2))]
 
     # set up maximum data transfer amount per run from source edge s3 to localstore
