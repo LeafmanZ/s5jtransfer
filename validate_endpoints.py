@@ -123,7 +123,7 @@ def main():
         print('\nSERIOUS ERROR. ALL DESTINATION ENDPOINTS HAVE FAILED. WILL NOT RUN. CHECK ENDPOINTS AND CONNECTION.\n')
     elif len(failed_src_endpoints) == len(src_endpoint_urls):
         print('\nSERIOUS ERROR. ALL SOURCE ENDPOINTS HAVE FAILED. WILL NOT RUN. CHECK ENDPOINTS AND CONNECTION.\n')
-    elif len(failed_dest_endpoints) == 0 and len(src_endpoint_urls) == 0:
+    elif len(failed_dest_endpoints) == 0 and len(failed_src_endpoints) == 0:
         print('\nSUCCESS. All endpoints are working.')
     else:
         print('\nWARNING. Some endpoints failed, however the data transfer might still work.\n')
