@@ -2,6 +2,13 @@ import yaml
 import os
 import subprocess
 import re
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
 
 def read_config(filename="config.yaml"):
     with open(filename, 'r') as stream:
@@ -10,6 +17,35 @@ def read_config(filename="config.yaml"):
         except yaml.YAMLError as exc:
             print(exc)
             return None
+
+def test_endpoint(bucket_name, prefix, s3_client, isSnow=False, timeout=5):
+    """List all objects in a given bucket with a specified prefix along with their size, with a timeout."""
+    """Returns True if endpoint is good, Returns False if endpoint is bad."""
+    def inner():
+        if isSnow:
+            return list_objects_sbe(bucket_name, prefix, s3_client)
+
+        objects = {}
+        paginator = s3_client.get_paginator('list_objects_v2')
+        for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+            if "Contents" in page:
+                for obj in page["Contents"]:
+                    if not obj["Key"].endswith('/'):
+                        key = obj["Key"].replace(prefix, '', 1)
+                        objects[key] = obj['Size']
+            break
+        return True
+
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(timeout)  # Set the timeout
+    try:
+        result = inner()
+    except Exception as e:
+        return False
+    finally:
+        signal.alarm(0)  # Disable the alarm
+
+    return result
 
 def list_objects(bucket_name, prefix, s3_client, isSnow=False):
     """List all objects in a given bucket with a specified prefix along with their size."""
@@ -39,28 +75,6 @@ def list_objects_sbe(bucket_name, prefix, s3_client):
             key = obj.key.replace(prefix, '', 1)
             objects[key] = obj.size
     return objects
-
-# def get_local_files(directory):
-#     """Return a dictionary with local file names as keys and their sizes as values, 
-#     excluding files whose extensions end with numbers, but including those ending with 
-#     an underscore followed by one or two digits."""
-#     local_files = {}
-
-#     # Pattern to match files whose extensions end with numbers, 
-#     # excluding an underscore followed by 1 or 2 digits
-#     pattern = re.compile(r'\.[^._]+_\d{3,}$|\.[^._]+\d+$')
-    
-#     for root, dirs, files in os.walk(directory):
-#         for file in files:
-#             # If file matches pattern, skip it
-#             if pattern.search(file):
-#                 continue
-            
-#             path = os.path.join(root, file)
-#             relative_path = os.path.relpath(path, directory)
-#             local_files[relative_path] = os.path.getsize(path)
-    
-#     return local_files
 
 def get_local_files(directory):
     """Return a dictionary with local file names as keys and their sizes as values, 

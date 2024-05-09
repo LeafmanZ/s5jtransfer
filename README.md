@@ -1,21 +1,21 @@
-About s5jtransfer_v11:
+About s5jtransfer_v12:
 
 The text describes a set of requirements and setup instructions for a data transfer application or script, specifically tailored for the Linux operating system on AMD64 architecture. 
 The application is developed in Go and Python, and it utilizes a tool called s5cmd for interacting with Amazon S3 services.
 
-The preference for custom s5jtransfer_v11 scripts over the standard s5cmd stems from the latter's limitations, particularly in robust sync features. 
+The preference for custom s5jtransfer_v12 scripts over the standard s5cmd stems from the latter's limitations, particularly in robust sync features. 
 While standard s5cmd excels in creating concurrent copy commands for efficient data transfer, it falls short in preventing redundant data transfer. 
 This issue becomes evident in complex tasks, such as performing a dual sync from an S3 Snowball to local storage and then to another S3 bucket.
 Such a limitation was highlighted during a power outage at the forward edge, where the native s5cmd sync failed to transfer data from the archiver to the snowball, 
-a problem that was resolved using the custom s5jtransfer_v11 sync script.
+a problem that was resolved using the custom s5jtransfer_v12 sync script.
 
-The custom s5jtransfer_v11 scripts offer enhanced capabilities, including dual sync with checksum verification, support for multiple volume transfers to improve read/write speeds, and avoidance of data transfer bottlenecks. 
+The custom s5jtransfer_v12 scripts offer enhanced capabilities, including dual sync with checksum verification, support for multiple volume transfers to improve read/write speeds, and avoidance of data transfer bottlenecks. 
 Additionally, they maintain a detailed ledger to monitor data at every transfer stage. 
-A key advantage of these s5jtransfer_v11 scripts is their compatibility with Versa SD-WAN, enabling data transfer via this network, a functionality absent in the native s5cmd.
+A key advantage of these s5jtransfer_v12 scripts is their compatibility with Versa SD-WAN, enabling data transfer via this network, a functionality absent in the native s5cmd.
 
 =====================================================================================================================================================================================
 
-TLDR I hate reading, I just want to start using s5jtransfer_v11:
+TLDR I hate reading, I just want to start using s5jtransfer_v12:
 
 1. Attach as many volumes as possible to your EC2 instance for optimal performance.
 2. Edit the `config.yaml` file by entering `nano config.yaml`. Save your changes with `Ctrl+O` and exit with `Ctrl+X`.
@@ -47,7 +47,7 @@ Set up instructions (Applicable if prerequisites aren't installed):
 
     SETUP FROM AMI
 
-    And then skip the rest of this section because everything is already set up and configured in the s5jtransfer_v11 ami.
+    And then skip the rest of this section because everything is already set up and configured in the s5jtransfer_v12 ami.
 
     SETUP FROM SCRATCH
 

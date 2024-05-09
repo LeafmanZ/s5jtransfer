@@ -18,7 +18,8 @@ def delete_contents(path):
             shutil.rmtree(item_path)
 
 def delete_volume_contents():
-    base_dir = '/tmp'
+    # base_dir = '/tmp'
+    base_dir = '/home/leafmanznotel'
     if os.path.exists(base_dir):
         for dir_name in os.listdir(base_dir):
             if dir_name.startswith('volume-') and dir_name[7:].isdigit():
@@ -40,7 +41,6 @@ if __name__ == "__main__":
     # Remove files if they exist
     safe_remove('src_commands.txt')
     safe_remove('dest_ledger.csv')
-    safe_remove('dest_commands.txt')
     safe_remove('src_ledger.csv')
 
     df = pd.DataFrame(columns=['Key', 'Size'])
@@ -50,6 +50,9 @@ if __name__ == "__main__":
 
     if not config:
         print("Failed to read the configuration.")
+
+    for i in range(max(len(config["transfer_settings"]["dest_endpoint_url"]), 10)):
+        safe_remove(f'dest_commands_{i}.txt')
 
     # Remove directory if it exists and then create it
     if os.path.exists(config["local"]["directory"]):

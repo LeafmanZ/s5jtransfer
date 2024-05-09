@@ -5,8 +5,17 @@ import concurrent.futures
 import pandas as pd
 import time
 from helper import read_config, list_objects, get_disk_usage, get_all_local_files
+import json
 
 def main():
+
+    # Read data from JSON file
+    with open('failed_endpoints.json', 'r') as file:
+        failed_endpoints_data = json.load(file)
+
+    # Extract values
+    failed_src_endpoints = failed_endpoints_data["failed_src_endpoints"]
+
     config = read_config()
 
     if not config:
@@ -21,21 +30,23 @@ def main():
     secret_access_key_src = config["source"]["secret_access_key"]
 
     # set up source s3 url
-    src_endpoint_url = config["transfer_settings"]["src_endpoint_url"]
+    src_endpoint_urls = config["transfer_settings"]["src_endpoint_url"]
+    src_endpoint_urls = [url for url in src_endpoint_urls if url not in failed_src_endpoints]
+
     src_use_native_s3 = config["transfer_settings"]["src_use_native_s3"]
 
-    if src_endpoint_url == 'no_endpoint':
+    if src_endpoint_urls[0] == 'no_endpoint':
         s3_client_src = boto3.client('s3', 
         aws_access_key_id=access_key_src, 
         aws_secret_access_key=secret_access_key_src, 
         region_name=bucket_src_region)
-    elif src_endpoint_url != 'no_endpoint' and bucket_src_region != 'snow': 
+    elif src_endpoint_urls[0] != 'no_endpoint' and bucket_src_region != 'snow': 
         # create aws clients to see source objects
         s3_client_src = boto3.client('s3', 
         aws_access_key_id=access_key_src, 
         aws_secret_access_key=secret_access_key_src, 
         region_name=bucket_src_region, 
-        endpoint_url=src_endpoint_url, 
+        endpoint_url=src_endpoint_urls[0],
         use_ssl=False, verify=False)
     else:
         # Initialize a session using your credentials (for the sake of this example, I'm using hardcoded credentials; in production, use IAM roles or other secure ways)
@@ -45,13 +56,14 @@ def main():
         )
 
         # Connect to S3 with the specified endpoint
-        if 'https' in src_endpoint_url: # denotes new snowballs
-            s3_client_src = session.resource('s3', endpoint_url=src_endpoint_url, verify=False)
+        if 'https' in src_endpoint_urls[0]: # denotes new snowballs
+            s3_client_src = session.resource('s3', endpoint_url=src_endpoint_urls[0], verify=False)
         else:
-            s3_client_src = session.resource('s3', endpoint_url=src_endpoint_url)
+            s3_client_src = session.resource('s3', endpoint_url=src_endpoint_urls[0])
 
     # set up available volumes
-    base_path = "/tmp/volume-"
+    # base_path = "/tmp/volume-"
+    base_path = "/home/leafmanznotel/volume-"
     volumes = [base_path + str(i).zfill(2) for i in range(1, 100) if os.path.exists(base_path + str(i).zfill(2))]
 
     # set up maximum data transfer amount per run from source edge s3 to localstore
@@ -69,6 +81,7 @@ def main():
     else:
         src_difference = {key for key in objects_in_src if (key not in local_files or objects_in_src[key] != local_files[key])}
 
+    data = []
     if src_difference:
         data = [(key, objects_in_src[key]) for key in src_difference]
         data.sort(key=lambda x: x[1], reverse=True)  # Sort descending by size
@@ -77,7 +90,7 @@ def main():
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
 
-    while src_difference:
+    while True:
         volume_usages = {volume: get_disk_usage(volume) for volume in volumes}
         
         available_space_per_volume = {
@@ -101,6 +114,7 @@ def main():
                     obj_key, obj_size = data[data_idx]
                     
                     volume_idx = (data_idx) % len(available_space_per_volume)
+                    endpoint_idx = (data_idx) % len(src_endpoint_urls)
                     
                     space_left = available_space_per_volume[available_space_per_volume_keys[volume_idx]] - obj_size
                     if space_left > 0:
@@ -108,15 +122,15 @@ def main():
                         src_path = f"s3://{bucket_src_name}/{bucket_src_prefix}{obj_key}"
                         dst_path = f"{available_space_per_volume_keys[volume_idx]}/{obj_key}"
                         
-                        if src_endpoint_url == 'no_endpoint': # likely using normal cloud s3 bucket
+                        if src_endpoint_urls[endpoint_idx] == 'no_endpoint': # likely using normal cloud s3 bucket
                             command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region}"
-                        elif src_endpoint_url != 'no_endpoint' and bucket_src_region != 'snow': # likely using transfer accelerator
-                            command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region} --endpoint-url={src_endpoint_url} --no-verify-ssl"
+                        elif src_endpoint_urls[endpoint_idx] != 'no_endpoint' and bucket_src_region != 'snow': # likely using transfer accelerator
+                            command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region} --endpoint-url={src_endpoint_urls[endpoint_idx]} --no-verify-ssl"
                         else:
-                            if 'https' in src_endpoint_url: # denotes new snowball s3
-                                command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region} --endpoint-url={src_endpoint_url} --no-verify-ssl"
+                            if 'https' in src_endpoint_urls[endpoint_idx]: # denotes new snowball s3
+                                command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region} --endpoint-url={src_endpoint_urls[endpoint_idx]} --no-verify-ssl"
                             else: # denotes old snowball s3
-                                command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region} --endpoint-url={src_endpoint_url}"
+                                command = f"aws s3 cp '{src_path}' '{dst_path}' --region {bucket_src_region} --endpoint-url={src_endpoint_urls[endpoint_idx]}"
                         file.write(command + '\n')
                     else:
                         del available_space_per_volume[available_space_per_volume_keys[volume_idx]]
@@ -175,15 +189,15 @@ def main():
             print(f"Commands have been written to src_commands.txt.")
             
             # Execute the shell src_command
-            if src_endpoint_url == 'no_endpoint': # likely using normal cloud s3 bucket
+            if src_endpoint_urls[0] == 'no_endpoint': # likely using normal cloud s3 bucket
                 src_command = "time ./s5cmd --stat --numworkers 64 run src_commands.txt"
-            elif src_endpoint_url != 'no_endpoint' and bucket_src_region != 'snow': # likely using transfer accelerator
-                src_command = f"time ./s5cmd --stat --endpoint-url={src_endpoint_url} --no-verify-ssl --numworkers 64 run src_commands.txt"
+            elif src_endpoint_urls[0] != 'no_endpoint' and bucket_src_region != 'snow': # likely using transfer accelerator
+                src_command = f"time ./s5cmd --stat --endpoint-url={src_endpoint_urls[0]} --no-verify-ssl --numworkers 64 run src_commands.txt"
             else:
-                if 'https' in src_endpoint_url: # denotes new snowball s3
-                    src_command = f"time ./s5cmd --stat --endpoint-url={src_endpoint_url} --no-verify-ssl --numworkers 64 run src_commands.txt"
+                if 'https' in src_endpoint_urls[0]: # denotes new snowball s3
+                    src_command = f"time ./s5cmd --stat --endpoint-url={src_endpoint_urls[0]} --no-verify-ssl --numworkers 64 run src_commands.txt"
                 else: # denotes old snowball s3
-                    src_command = f"time ./s5cmd --stat --endpoint-url={src_endpoint_url} --numworkers 64 run src_commands.txt"
+                    src_command = f"time ./s5cmd --stat --endpoint-url={src_endpoint_urls[0]} --numworkers 64 run src_commands.txt"
             os.system(src_command)
 
         # Continue with the rest of your script
@@ -202,6 +216,15 @@ def main():
         print('Objects set to move have been recorded to src_ledger.csv')
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
+
+        if len(data) <= 0:
+            os.system('python repair_ledger.py')
+
+        with open('sync_progress.json', 'r') as file:
+            sync_data = json.load(file)
+        
+        if 'Completed' in sync_data['Status']:
+            break
 
     print('ALL FILES FROM SOURCE HAVE COMPLETED MOVING.')
     print('src_sync_mvol.py has stopped.')
