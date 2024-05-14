@@ -1,6 +1,6 @@
-import subprocess
 import os
 import concurrent.futures
+import datetime
 
 def main():
     # Ask the user if the volumes have been provisioned and setup_volumes.py has been run
@@ -84,9 +84,12 @@ def main():
         os.system(f'python {script_name}')
 
     final_approval = input("\nDo you want to begin the data transfer (y/n)? ")
-    # Proceed only if the answer is 'y'
     if final_approval.lower() == 'y':
         print('Executing src_sync_mvol.py and dest_sync_mvol.py.')
+
+        # Record start time
+        start_time = datetime.datetime.now()
+
         # Scripts to run concurrently
         scripts = ["src_sync_mvol.py", "dest_sync_mvol.py"]
 
@@ -95,7 +98,17 @@ def main():
             # Map the run_script function to the scripts
             executor.map(run_script, scripts)
 
+        # Record end time
+        end_time = datetime.datetime.now()
+
+        # Calculate the duration
+        duration = (end_time - start_time).total_seconds()
+
+        # Print the time details
         print('\n\nALL DATA IS MOVED. RUN repair_ledger.py TO DO A FINAL DATA INTEGRITY CHECK.')
+        print("Start time:", start_time.strftime("%Y-%m-%d %H:%M:%S"))
+        print("End time:", end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        print("Total duration:", duration, "seconds")     
     else:
         print("Please verify the config.yaml and your endpoints before proceeding.")
         quit()
