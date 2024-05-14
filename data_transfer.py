@@ -78,15 +78,10 @@ def main():
         quit()
 
     def run_script(script_name):
-        """Function to run a python script using subprocess."""
+        """Function to run a python script using os.system and print outputs."""
         print(f"Running {script_name}...")
-        # Run the script and capture the output
-        result = subprocess.run(['python', script_name], capture_output=True, text=True)
-        # Output the results
-        print(f"Output of {script_name}:")
-        print(result.stdout)
-        # print("Errors if any:")
-        # print(result.stderr)
+        # Run the script and directly print the output
+        os.system(f'python {script_name}')
 
     final_approval = input("\nDo you want to begin the data transfer (y/n)? ")
     # Proceed only if the answer is 'y'
@@ -104,8 +99,6 @@ def main():
     else:
         print("Please verify the config.yaml and your endpoints before proceeding.")
         quit()
-
-    
     
 if __name__ == "__main__":
     main()
