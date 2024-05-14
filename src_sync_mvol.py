@@ -112,8 +112,11 @@ def main():
             with open('src_commands.txt', 'a') as file:
                 for data_idx in range(len(data)):
                     obj_key, obj_size = data[data_idx]
-                    
-                    volume_idx = (data_idx) % len(available_space_per_volume)
+
+                    try:
+                        volume_idx = (data_idx) % len(available_space_per_volume)
+                    except:
+                        print('FAILING. Please mount volumes and run setup_volumes.py!!!')
                     endpoint_idx = (data_idx) % len(src_endpoint_urls)
                     
                     space_left = available_space_per_volume[available_space_per_volume_keys[volume_idx]] - obj_size
