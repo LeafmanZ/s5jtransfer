@@ -82,9 +82,11 @@ def main():
         src_difference = {key for key in objects_in_src if (key not in local_files or objects_in_src[key] != local_files[key])}
 
     data = []
+    intial_len_data = 0
     if src_difference:
         data = [(key, objects_in_src[key]) for key in src_difference]
         data.sort(key=lambda x: x[1], reverse=True)  # Sort descending by size
+        intial_len_data = len(data)
     else:
         print(f"All objects in {bucket_src_name}/{bucket_src_prefix} are identical in {volumes}. Or all objects that can possibly be moved to {volumes} have been moved.")
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
@@ -215,7 +217,9 @@ def main():
             current_run_src_ledger_df.to_csv('src_ledger.csv', mode='a', header=False, index=False)
         
         data = data[len(recent_batch_data):]
-            
+        
+        print('\nPROGRESS')
+        print(f'{(len(data)//intial_len_data)*100}%\n')
         print('Objects set to move have been recorded to src_ledger.csv')
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
