@@ -145,14 +145,9 @@ def main():
         
         if 'Completed' in sync_data['Status']:
             print('SUCCESS, COMPLETE')
-            print('ALL FILES HAVE COMPLETED MOVING.')
+            print('ALL DESTINATION FILES HAVE COMPLETED MOVING.')
             break
 
-        if 'Semi-Incomplete' in sync_data['Status']:
-            print('WARNING, SEMI-INCOMPLETE')
-            print('SOME FILES HAVE FAILED TO MOVE PLEASE INVESTIGATE')
-            break
-    
     print('dest_sync_mvol.py has stopped.')
     print('PLEASE RUN repair_ledger.py to verify data integrity.')
 

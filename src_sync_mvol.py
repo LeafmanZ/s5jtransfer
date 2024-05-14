@@ -229,6 +229,28 @@ def main():
         if 'Completed' in sync_data['Status']:
             break
 
+        if 'Incomplete' in sync_data['Status']:
+            # Get the objects in our source bucket and volumes to compare missing objects and sync them from source to local
+            objects_in_src = list_objects(bucket_src_name, bucket_src_prefix, s3_client_src, isSnow=(bucket_src_region=='snow'))
+            local_files = get_all_local_files(volumes)
+
+            # Get keys in S3 bucket not in local or with different sizes, also checks if the keys have already been moved as recorded in the source ledger
+            if os.path.isfile('src_ledger.csv'):
+                src_ledger_df = pd.read_csv('src_ledger.csv')
+                src_difference = {key for key in objects_in_src if (key not in local_files or objects_in_src[key] != local_files[key]) and (key not in src_ledger_df['Key'].values)}
+            else:
+                src_difference = {key for key in objects_in_src if (key not in local_files or objects_in_src[key] != local_files[key])}
+
+            data = []
+            if src_difference:
+                data = [(key, objects_in_src[key]) for key in src_difference]
+                data.sort(key=lambda x: x[1], reverse=True)  # Sort descending by size
+            else:
+                print(f"All objects in {bucket_src_name}/{bucket_src_prefix} are identical in {volumes}. Or all objects that can possibly be moved to {volumes} have been moved.")
+                print('Waiting 1 second before checking for new additions of data in the source bucket.')
+                time.sleep(1)
+
+
     print('ALL FILES FROM SOURCE HAVE COMPLETED MOVING.')
     print('src_sync_mvol.py has stopped.')
     print('PLEASE RUN repair_ledger.py to verify data integrity.')
