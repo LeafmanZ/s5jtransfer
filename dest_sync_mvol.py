@@ -114,8 +114,9 @@ def main():
                     dest_command = f"time ./s5cmd --stat --endpoint-url={dest_endpoint_urls[dest_endpoint_url_idx]} {verify_ssl} --numworkers 64 run dest_commands_{dest_endpoint_url_idx}.txt"
                 dest_commands.append(dest_command)
             else:
-                print(f"All objects in {bucket_dest_name}/{bucket_dest_prefix} are identical in {volumes}.")
-        
+                # print(f"All objects in {bucket_dest_name}/{bucket_dest_prefix} are identical in {volumes}.")
+                pass
+
         # Use ThreadPoolExecutor to execute commands concurrently
         if dest_commands:
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(dest_commands)) as executor:
@@ -137,7 +138,7 @@ def main():
             except Exception as e:
                 print(f"Error removing file {obj_vol}/{obj_key}: {e}")
                 
-        print('Waiting 1 second before checking for new additions of data in the source bucket.')
+        # print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
 
         with open('sync_progress.json', 'r') as file:
