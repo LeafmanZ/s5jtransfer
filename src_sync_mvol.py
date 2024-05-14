@@ -82,7 +82,7 @@ def main():
         src_difference = {key for key in objects_in_src if (key not in local_files or objects_in_src[key] != local_files[key])}
 
     data = []
-    intial_len_data = len(objects_in_src)
+    initial_len_data = len(objects_in_src)
     if src_difference:
         data = [(key, objects_in_src[key]) for key in src_difference]
         data.sort(key=lambda x: x[1], reverse=True)  # Sort descending by size
@@ -218,7 +218,7 @@ def main():
         data = data[len(recent_batch_data):]
         
         print('\nPROGRESS')
-        print(f'{(len(data)/intial_len_data)*100}%\n')
+        print(f'{(1-(len(data)/initial_len_data))*100}%\n')
         print('Objects set to move have been recorded to src_ledger.csv')
         print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)

@@ -124,7 +124,8 @@ def main():
                 for future in concurrent.futures.as_completed(futures):
                     print(f"Command executed with return code: {future.result()}")
         else:
-            print("No commands to execute.")
+            # print("No commands to execute.")
+            pass
 
         dest_same = {key:vol for vol, files in local_files.items() for key in files if key in objects_in_dest and files[key] == objects_in_dest[key]}
 
