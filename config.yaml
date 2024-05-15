@@ -23,6 +23,7 @@ transfer_settings:
   max_size_to_transfer_src2l: 52073738204 # Maximum total size (in bytes) of files to transfer at one time from source to localstore (or each individual volume)
   max_size_to_transfer_l2dest: 200 # NOT IMPLEMENTED: Maximum total size (in gigabytes) of files to transfer at one time from localstore to destination
   # dest_endpoint_url: 'desintation-bucket-name.s3-accelerate.amazonaws.com' # Endpoint URL for destination s3 bucket, if none set to 'no_endpoint', for legacy snowball use http + port #, otherwise https without port #
-  dest_endpoint_url: 'no_endpoint'
-  src_endpoint_url: 'https://999.999.999.12' # Endpoint URL for source s3 bucket, if none set to 'no_endpoint', for legacy snowball use http + port #, otherwise https without port #
+  dest_endpoint_url: ['no_endpoint']
+  # dest_endpoint_url: ['https://999.999.999.12', 'https://999.999.999.13', 'https://999.999.999.14']
+  src_endpoint_url: ['https://999.999.999.12'] # Endpoint URL for source s3 bucket, if none set to 'no_endpoint', for legacy snowball use http + port #, otherwise https without port #
   src_use_native_s3: True # Set to False to use s5cmd for src to local data transfers. True to use s3 api (safest).
