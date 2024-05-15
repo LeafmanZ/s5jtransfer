@@ -217,10 +217,14 @@ def main():
         
         data = data[len(recent_batch_data):]
         
-        print('\nPROGRESS')
-        print(f'{(1-(len(data)/initial_len_data))*100}%\n')
-        print('Objects set to move have been recorded to src_ledger.csv')
-        print('Waiting 1 second before checking for new additions of data in the source bucket.')
+        print('\nSOURCE PROGRESS')
+        src_progress = (1-(len(data)/initial_len_data))*100
+        print(f'{src_progress}%\n')
+        if src_progress > 99:
+            print('WAIT for the destination sync to complete now.')
+
+        # print('Objects set to move have been recorded to src_ledger.csv')
+        # print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)
 
         if len(data) <= 0:
