@@ -219,9 +219,9 @@ def main():
         
         print('\nSOURCE PROGRESS')
         src_progress = (1-(len(data)/initial_len_data))*100
-        print(f'{src_progress}%\n')
+        print(f'{src_progress}%')
         if src_progress > 99:
-            print('WAIT for the destination sync to complete now.')
+            print('WAIT for the destination sync to complete now.\n')
 
         # print('Objects set to move have been recorded to src_ledger.csv')
         # print('Waiting 1 second before checking for new additions of data in the source bucket.')
