@@ -90,8 +90,11 @@ def get_local_files(directory):
     for root, dirs, files in os.walk(directory):
         for file in files:
             # If file matches pattern, skip it
-            if pattern.search(file[file.rindex('.'):]) or pattern2.search(file[file.rindex('.'):]):
+            if '.' not in file:
+                pass
+            elif pattern.search(file[file.rindex('.'):]) or pattern2.search(file[file.rindex('.'):]):
                 continue
+
             
             path = os.path.join(root, file)
             relative_path = os.path.relpath(path, directory)
