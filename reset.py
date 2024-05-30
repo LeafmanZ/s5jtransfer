@@ -18,8 +18,8 @@ def delete_contents(path):
             shutil.rmtree(item_path)
 
 def delete_volume_contents():
-    # base_dir = '/tmp'
-    base_dir = '/home/leafmanznotel'
+    base_dir = '/tmp'
+    # base_dir = '/home/leafmanznotel'
     if os.path.exists(base_dir):
         for dir_name in os.listdir(base_dir):
             if dir_name.startswith('volume-') and dir_name[7:].isdigit():
@@ -42,6 +42,9 @@ if __name__ == "__main__":
     safe_remove('src_commands.txt')
     safe_remove('dest_ledger.csv')
     safe_remove('src_ledger.csv')
+    safe_remove('missing.txt')
+    safe_remove('sync_progress.json')
+    safe_remove('failed_endpoints.json')
 
     df = pd.DataFrame(columns=['Key', 'Size'])
     df.to_csv('src_ledger.csv', index=False)

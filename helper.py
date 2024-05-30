@@ -23,8 +23,19 @@ def test_endpoint(bucket_name, prefix, s3_client, isSnow=False, timeout=5):
     """Returns True if endpoint is good, Returns False if endpoint is bad."""
     def inner():
         if isSnow:
-            return list_objects_sbe(bucket_name, prefix, s3_client)
+            objects = {}
 
+            # Get the bucket instance
+            bucket = s3_client.Bucket(bucket_name)
+
+            # List all the objects in the bucket with the given prefix
+            for obj in bucket.objects.filter(Prefix=prefix):
+                if not obj.key.endswith('/'):
+                    key = obj.key.replace(prefix, '', 1)
+                    objects[key] = obj.size
+                break
+            return True
+        
         objects = {}
         paginator = s3_client.get_paginator('list_objects_v2')
         for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
