@@ -44,8 +44,7 @@ if __name__ == "__main__":
     safe_remove('src_ledger.csv')
     safe_remove('missing.txt')
     safe_remove('sync_progress.json')
-    safe_remove('failed_endpoints.json')
-
+    
     df = pd.DataFrame(columns=['Key', 'Size'])
     df.to_csv('src_ledger.csv', index=False)
 

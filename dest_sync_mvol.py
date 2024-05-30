@@ -34,6 +34,11 @@ def main():
     bucket_dest_region = config["destination"]["region"]
     access_key_dest = config["destination"]["access_key"]
     secret_access_key_dest = config["destination"]["secret_access_key"]
+    delete_staging_data = config["destination"]["delete_staging_data"]
+    staging_volumes = config["destination"]["staging_volumes"]
+
+    if staging_volumes != ['default']:
+        volumes = staging_volumes
 
     # set up destination s3 url
     dest_endpoint_urls = config["transfer_settings"]["dest_endpoint_url"]
@@ -126,18 +131,19 @@ def main():
         else:
             # print("No commands to execute.")
             pass
+        
+        if delete_staging_data:
+            dest_same = {key:vol for vol, files in local_files.items() for key in files if key in objects_in_dest and files[key] == objects_in_dest[key]}
 
-        dest_same = {key:vol for vol, files in local_files.items() for key in files if key in objects_in_dest and files[key] == objects_in_dest[key]}
+            # only save keys that are in dest_same (marked for deletion) and keys that are in src_ledger_df
+            src_ledger_df = pd.read_csv('src_ledger.csv')
+            dest_same_ledger = {obj_key: obj_vol for obj_key, obj_vol in dest_same.items() if obj_key in list(src_ledger_df['Key'])}
 
-        # only save keys that are in dest_same (marked for deletion) and keys that are in src_ledger_df
-        src_ledger_df = pd.read_csv('src_ledger.csv')
-        dest_same_ledger = {obj_key: obj_vol for obj_key, obj_vol in dest_same.items() if obj_key in list(src_ledger_df['Key'])}
-
-        for obj_key, obj_vol in dest_same_ledger.items():
-            try:
-                os.remove(f"{obj_vol}/{obj_key}")
-            except Exception as e:
-                print(f"Error removing file {obj_vol}/{obj_key}: {e}")
+            for obj_key, obj_vol in dest_same_ledger.items():
+                try:
+                    os.remove(f"{obj_vol}/{obj_key}")
+                except Exception as e:
+                    print(f"Error removing file {obj_vol}/{obj_key}: {e}")
                 
         # print('Waiting 1 second before checking for new additions of data in the source bucket.')
         time.sleep(1)

@@ -17,6 +17,8 @@ destination:
   region: "us-east-1"
   access_key: 'ewfewqfewqf'
   secret_access_key: 'ewfjkwenfwefwefp'
+  delete_staging_data: True # set to False if you are moving from a performer to snowball
+  staging_volumes: ['default'] # set to ['default'] to use prebuilt volume setup, otherwise use this example ['/home/MyDir1', '/home/ubuntu/MyOtherDir2']
 
 # Configuration for managing data transfer from s3-edge to localstore based on size
 transfer_settings:
